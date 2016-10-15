@@ -8,6 +8,8 @@ public class PlayerController : MonoBehaviour {
 	private Animator _animator;
 	private GameObject _camera;
 	private GameObject _spawnPoint;
+	private GameObject _gameControllerObject;
+	private GameController _gameController;
 
 	private float _move;
 	private float _jump;
@@ -22,6 +24,9 @@ public class PlayerController : MonoBehaviour {
 	[Header("Sound Clips")]
 	public AudioSource JumpSound;
 	public AudioSource DeathSound;
+	public AudioSource CoinSound;
+	public AudioSource HurtSound;
+	public AudioSource EnemyDeadSound;
 
 	// Use this for initialization
 	void Start () {
@@ -85,6 +90,9 @@ public class PlayerController : MonoBehaviour {
 		this._camera = GameObject.FindWithTag ("MainCamera");
 		this._spawnPoint = GameObject.FindWithTag ("SpawnPoint");
 
+		this._gameControllerObject = GameObject.Find ("Game Controller");
+		this._gameController = this._gameControllerObject.GetComponent<GameController> () as GameController;
+
 		this._move = 0f;
 		this._isFacingRight = true;
 		this._isGrounded = false;
@@ -106,6 +114,20 @@ public class PlayerController : MonoBehaviour {
 			// move the player's position to the spawn point's position
 			this._transform.position = this._spawnPoint.transform.position;
 			this.DeathSound.Play ();
+			this._gameController.LivesValue -= 1;
+		}
+
+		if (other.gameObject.CompareTag ("Coin")) {
+			Destroy (other.gameObject);
+			this.CoinSound.Play ();
+			this._gameController.ScoreValue += 100;
+		}
+
+		if (other.gameObject.CompareTag ("Enemy")) {
+			// move the player's position to the spawn point's position
+			this._transform.position = this._spawnPoint.transform.position;
+			this.HurtSound.Play ();
+			this._gameController.LivesValue -= 1;
 		}
 	}
 
@@ -119,5 +141,13 @@ public class PlayerController : MonoBehaviour {
 		this._animator.SetInteger ("HeroState", 2);
 
 		this._isGrounded = false;
+	}
+
+	// debug if player lands on object's head
+	private void OnTriggerEnter2D(Collider2D other) {
+		if(other.gameObject.CompareTag("Enemy")) {
+			this.EnemyDeadSound.Play ();
+			Destroy (other.gameObject);
+		}
 	}
 }
