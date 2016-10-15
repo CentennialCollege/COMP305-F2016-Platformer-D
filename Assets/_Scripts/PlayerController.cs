@@ -5,6 +5,10 @@ public class PlayerController : MonoBehaviour {
 	// PRIVATE INSTANCE VARIABLES
 	private Transform _transform;
 	private Rigidbody2D _rigidbody;
+	private Animator _animator;
+	private GameObject _camera;
+	private GameObject _spawnPoint;
+
 	private float _move;
 	private float _jump;
 	private bool _isFacingRight;
@@ -13,8 +17,7 @@ public class PlayerController : MonoBehaviour {
 	// PUBLIC INSTANCE VARIABLES (FOR TESTING)
 	public float Velocity = 10f;
 	public float JumpForce = 100f;
-	public Camera camera;
-	public Transform SpawnPoint;
+
 
 	[Header("Sound Clips")]
 	public AudioSource JumpSound;
@@ -32,14 +35,19 @@ public class PlayerController : MonoBehaviour {
 			// check if input is present for movement
 			this._move = Input.GetAxis ("Horizontal");
 			if (this._move > 0f) {
+				// set the animation state to "Walk"
+				this._animator.SetInteger ("HeroState", 1);
 				this._move = 1;
 				this._isFacingRight = true;
 				this._flip ();
 			} else if (this._move < 0f) {
+				this._animator.SetInteger ("HeroState", 1);
 				this._move = -1;
 				this._isFacingRight = false;
 				this._flip ();
 			} else {
+				// set the animation state to "Idle"
+				this._animator.SetInteger ("HeroState", 0);
 				this._move = 0f;
 			}
 
@@ -59,9 +67,7 @@ public class PlayerController : MonoBehaviour {
 			this._jump = 0f;
 		}
 
-
-
-		this.camera.transform.position = new Vector3 (
+		this._camera.transform.position = new Vector3 (
 			this._transform.position.x, 
 			this._transform.position.y, 
 			-10f);
@@ -75,6 +81,10 @@ public class PlayerController : MonoBehaviour {
 	private void _initialize() {
 		this._transform = GetComponent<Transform> ();
 		this._rigidbody = GetComponent<Rigidbody2D> ();
+		this._animator = GetComponent<Animator> ();
+		this._camera = GameObject.FindWithTag ("MainCamera");
+		this._spawnPoint = GameObject.FindWithTag ("SpawnPoint");
+
 		this._move = 0f;
 		this._isFacingRight = true;
 		this._isGrounded = false;
@@ -94,7 +104,7 @@ public class PlayerController : MonoBehaviour {
 	private void OnCollisionEnter2D(Collision2D other) {
 		if (other.gameObject.CompareTag ("DeathPlane")) {
 			// move the player's position to the spawn point's position
-			this._transform.position = this.SpawnPoint.position;
+			this._transform.position = this._spawnPoint.transform.position;
 			this.DeathSound.Play ();
 		}
 	}
@@ -106,6 +116,8 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	private void OnCollisionExit2D(Collision2D other) {
+		this._animator.SetInteger ("HeroState", 2);
+
 		this._isGrounded = false;
 	}
 }
